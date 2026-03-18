@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+dist/
+dist-ssr/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.sln
+*.sw?

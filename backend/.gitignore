@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# PDF OCR temp files
+temp_ocr_*
+uploads/temp_ocr_*
+
+# Dynamic Assets
+uploads/
+!uploads/.gitkeep
