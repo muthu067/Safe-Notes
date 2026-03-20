@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '../context/AuthContext';
 import { FolderPlus, BookOpen, User, Lock, Globe, ArrowRight, Library, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

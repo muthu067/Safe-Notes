@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const noteController = require('../controllers/noteController');
-const { requireAuth, optionalAuth } = require('../middleware/clerkAuth');
+const { requireAuth, optionalAuth } = require('../middleware/supabaseAuth');
 const upload = require('../middleware/upload');
 
 router.post('/', requireAuth, upload.single('file'), noteController.createNote);

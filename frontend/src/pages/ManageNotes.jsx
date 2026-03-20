@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../context/AuthContext';
 import { ThumbsUp, FileText, Trash2, Image, Clock, AlertTriangle, CheckCircle2, XCircle, Info, Library, X } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 

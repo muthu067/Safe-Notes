@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useUser, useAuth } from '@clerk/clerk-react';
-import { ThumbsUp, Flag, FileText, ArrowLeft, Trash2, Eye, Clock, BookOpen, Target, Sparkles, AlertCircle, CheckCircle2, HelpCircle, XCircle, ArrowRight, Library } from 'lucide-react';
+import { useUser, useAuth } from '../context/AuthContext';
+import { ThumbsUp, Flag, FileText, ArrowLeft, Trash2, Eye, Clock, BookOpen, Target, Sparkles, AlertCircle, CheckCircle2, HelpCircle, XCircle, ArrowRight, Library, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { pdfjs, Document, Page } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -130,6 +130,28 @@ export default function NoteDetail() {
         }
     };
 
+    const handleDownload = () => {
+        if (note.fileData && note.fileMimetype === 'application/pdf') {
+            const byteChars = atob(note.fileData);
+            const byteNums = new Array(byteChars.length).fill(0).map((_, i) => byteChars.charCodeAt(i));
+            const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${note.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } else if (note.fileUrl) {
+            const a = document.createElement('a');
+            a.href = note.fileUrl;
+            a.download = `${note.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            a.target = '_blank';
+            a.click();
+        } else {
+            window.print();
+        }
+    };
+
     if (loading) return (
         <div className="flex justify-center items-center h-screen bg-gray-50">
             <div className="text-center">
@@ -160,6 +182,13 @@ export default function NoteDetail() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleDownload}
+                            className="flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+                            title="Download PDF"
+                        >
+                            <Download className="mr-1.5 w-4 h-4" /> Download
+                        </button>
                         <button 
                             onClick={() => setShowCollectionModal(true)}
                             className="flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"

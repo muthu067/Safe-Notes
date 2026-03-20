@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const collectionController = require('../controllers/collectionController');
-const { requireAuth, optionalAuth } = require('../middleware/clerkAuth');
+const { requireAuth, optionalAuth } = require('../middleware/supabaseAuth');
 
 router.post('/', requireAuth, collectionController.createCollection);
 router.get('/', collectionController.getCollections);

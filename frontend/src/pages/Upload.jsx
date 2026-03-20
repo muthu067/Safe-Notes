@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { UploadCloud, FileText, Type, Tags, GraduationCap, BookOpen, AlertCircle, Sparkles } from 'lucide-react';

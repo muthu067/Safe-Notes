@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '../context/AuthContext';
 import { BookOpen, AlertCircle, ArrowLeft, ArrowRight, Library, Lock, Globe, ThumbsUp, Clock, Trash2, X } from 'lucide-react';
 
 export default function CollectionDetail() {
