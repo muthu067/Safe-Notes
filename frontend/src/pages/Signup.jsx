@@ -9,7 +9,6 @@ export default function Signup() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
 
     const handleSignup = async (e) => {
@@ -63,9 +62,8 @@ export default function Signup() {
                 username: trimmedUsername,
                 email
             });
+            navigate('/');
         }
-
-        setSuccess(true);
         setLoading(false);
     };
 
@@ -75,24 +73,11 @@ export default function Signup() {
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2 text-center">Create account</h2>
                 <p className="text-sm text-gray-500 text-center mb-6">Join the knowledge-sharing community.</p>
 
-                {success ? (
-                    <div className="flex items-start gap-3 text-green-700 bg-green-50 border border-green-200 rounded-md px-4 py-5 text-sm">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                        <div>
-                            <p className="font-semibold mb-1">Almost there!</p>
-                            <p>Check your inbox at <strong>{email}</strong> and click the confirmation link to activate your account.</p>
-                            <Link to="/login" className="mt-3 inline-block text-indigo-600 font-medium hover:underline">
-                                Go to Sign in →
-                            </Link>
-                        </div>
+                {error && (
+                    <div className="mb-4 flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-md px-4 py-3 text-sm">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
                     </div>
-                ) : (
-                    <>
-                        {error && (
-                            <div className="mb-4 flex items-center gap-2 text-red-700 bg-red-50 border border-red-200 rounded-md px-4 py-3 text-sm">
-                                <AlertCircle className="w-4 h-4 flex-shrink-0" /> {error}
-                            </div>
-                        )}
+                )}
                         <form onSubmit={handleSignup} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
@@ -147,8 +132,6 @@ export default function Signup() {
                             Already have an account?{' '}
                             <Link to="/login" className="text-indigo-600 font-medium hover:underline">Sign in</Link>
                         </p>
-                    </>
-                )}
             </div>
         </div>
     );
