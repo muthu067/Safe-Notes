@@ -29,7 +29,7 @@ export default function ManageNotes() {
                 };
                 const [notesRes, colRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/notes/mine`, config),
-                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/collections/my`, config)
+                    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/collections/mine`, config)
                 ]);
                 setNotes(notesRes.data); // Changed from res.data to notesRes.data
             } catch (err) {

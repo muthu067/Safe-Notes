@@ -59,6 +59,9 @@ exports.getCollectionById = async (req, res) => {
         }
         res.json(collection);
     } catch (err) {
+        if (err.name === 'CastError') {
+            return res.status(400).json({ error: "Invalid collection ID" });
+        }
         res.status(500).json({ error: "Failed to load collection" });
     }
 };
