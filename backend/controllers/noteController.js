@@ -183,7 +183,8 @@ exports.getMyNotes = async (req, res) => {
 exports.getNoteById = async (req, res) => {
     try {
         const { id } = req.params;
-        const note = await Note.findById(id);
+        // Explicitly exclude heavy fields in projection object
+        const note = await Note.findById(id, { fileData: 0, ocrText: 0, ocrText: 0 });
 
         if (!note) {
             return res.status(404).json({ error: "Note not found" });
@@ -196,6 +197,7 @@ exports.getNoteById = async (req, res) => {
             }
         }
 
+        res.set('X-Audit-Security', 'Applied-V1');
         res.json(note);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
@@ -341,5 +343,25 @@ exports.getRelatedNotes = async (req, res) => {
         res.json(related);
     } catch (err) {
         res.status(500).json({ error: "Failed to load related notes" });
+    }
+};
+
+exports.getNoteFile = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const note = await Note.findById(id).select('fileData fileMimetype status uploadedBy');
+        
+        if (!note) return res.status(404).json({ error: "File not found" });
+        if (note.status !== 'active' && note.uploadedBy !== req.userData?.userId) {
+            return res.status(403).json({ error: "Unauthorized access to file" });
+        }
+        if (!note.fileData) return res.status(404).json({ error: "No file data available" });
+
+        res.json({ 
+            fileData: note.fileData, 
+            fileMimetype: note.fileMimetype 
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch file data" });
     }
 };

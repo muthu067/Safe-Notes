@@ -21,7 +21,7 @@ app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(helmet({
-    crossOriginResourcePolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
 app.use('/api/moderation-webhook', moderationWebhook);

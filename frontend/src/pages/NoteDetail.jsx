@@ -27,6 +27,9 @@ export default function NoteDetail() {
     const [chatInput, setChatInput] = useState('');
     const [chatHistory, setChatHistory] = useState([]);
     const [isAsking, setIsAsking] = useState(false);
+    const [fetchedFileData, setFetchedFileData] = useState(null);
+    const [fetchedMimetype, setFetchedMimetype] = useState(null);
+    const [isFetchingFile, setIsFetchingFile] = useState(false);
     
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const { user } = useUser();
@@ -62,7 +65,36 @@ export default function NoteDetail() {
             }
         };
         fetchData();
-    }, [id, getToken]);
+    }, [id, getToken, user]);
+
+    useEffect(() => {
+        const fetchFile = async () => {
+            if (!note) return;
+            // If we have data in the note (backward compatibility) use it, else if no fileUrl we NEED it.
+            if (note.fileData) {
+                setFetchedFileData(note.fileData);
+                setFetchedMimetype(note.fileMimetype);
+                return;
+            }
+            
+            // If it's a PDF or Image and we don't have a direct URL, fetch the backup from DB
+            if (!note.fileUrl && (note.fileMimetype || isPdf)) {
+                try {
+                    setIsFetchingFile(true);
+                    const token = await getToken();
+                    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/notes/${id}/file`, config);
+                    setFetchedFileData(res.data.fileData);
+                    setFetchedMimetype(res.data.fileMimetype);
+                } catch (err) {
+                    console.error("Failed to fetch heavy data from DB", err);
+                } finally {
+                    setIsFetchingFile(false);
+                }
+            }
+        };
+        fetchFile();
+    }, [note, id, getToken]);
 
     const handleUpvote = async () => {
         if (!user) return alert('Please login to upvote');
@@ -130,9 +162,28 @@ export default function NoteDetail() {
         }
     };
 
-    const handleDownload = () => {
-        if (note.fileData && note.fileMimetype === 'application/pdf') {
-            const byteChars = atob(note.fileData);
+    const handleDownload = async () => {
+        let data = fetchedFileData;
+        let mime = fetchedMimetype || note.fileMimetype;
+
+        if (!data && !note.fileUrl) {
+            // Force fetch if we don't have it
+            try {
+                showToast('Preparing download...', 'success');
+                const token = await getToken();
+                const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+                const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/notes/${id}/file`, config);
+                data = res.data.fileData;
+                mime = res.data.fileMimetype;
+                setFetchedFileData(data);
+                setFetchedMimetype(mime);
+            } catch (err) {
+                return showToast('Failed to prepare download', 'error');
+            }
+        }
+
+        if (data && mime === 'application/pdf') {
+            const byteChars = atob(data);
             const byteNums = new Array(byteChars.length).fill(0).map((_, i) => byteChars.charCodeAt(i));
             const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
@@ -288,12 +339,13 @@ export default function NoteDetail() {
                 {/* Center Column: Viewer */}
                 <div className="flex-1 mt-6 lg:mt-0">
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                        {!isPdf ? (
+                         {!isPdf ? (
                             <div className="p-8 min-h-[500px]">
-                                {(note.fileData || note.fileUrl) && (
-                                    <div className="mb-8 border border-gray-100 rounded-md p-2 bg-gray-50 flex justify-center">
+                                {(fetchedFileData || note.fileUrl) && (
+                                    <div className="mb-8 border border-gray-100 rounded-md p-2 bg-gray-50 flex justify-center flex-col items-center">
+                                        {isFetchingFile && !note.fileUrl && <div className="animate-pulse text-xs text-indigo-500 mb-2">Loading high-res image...</div>}
                                         <img 
-                                            src={note.fileData ? `data:${note.fileMimetype};base64,${note.fileData}` : note.fileUrl} 
+                                            src={fetchedFileData ? `data:${fetchedMimetype || note.fileMimetype};base64,${fetchedFileData}` : note.fileUrl} 
                                             alt={note.title} 
                                             className="max-w-full rounded h-auto max-h-[500px] object-contain" 
                                         />
@@ -310,7 +362,7 @@ export default function NoteDetail() {
                         ) : (
                             <div className="bg-gray-100 max-h-[85vh] overflow-y-auto w-full flex flex-col items-center py-6">
                                 <Document
-                                    file={note.fileData ? `data:${note.fileMimetype};base64,${note.fileData}` : note.fileUrl}
+                                    file={fetchedFileData ? `data:${fetchedMimetype || note.fileMimetype};base64,${fetchedFileData}` : note.fileUrl}
                                     onLoadSuccess={({ numPages }) => setNumPages(numPages)}
                                     className="flex flex-col items-center gap-6"
                                 >
