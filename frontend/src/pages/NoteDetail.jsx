@@ -34,6 +34,8 @@ export default function NoteDetail() {
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const { user } = useUser();
     const { getToken } = useAuth();
+    
+    const isPdf = note ? (note.fileMimetype === 'application/pdf' || note.fileUrl?.toLowerCase().endsWith('.pdf')) : false;
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -213,8 +215,6 @@ export default function NoteDetail() {
     );
 
     if (!note) return <div>Note not found</div>;
-
-    const isPdf = note.fileMimetype === 'application/pdf' || note.fileUrl?.toLowerCase().endsWith('.pdf');
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
