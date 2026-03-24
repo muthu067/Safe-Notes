@@ -164,7 +164,8 @@ export default function NoteDetail() {
         }
     };
 
-    const handleDownload = async () => {
+    const handleDownload = async (e) => {
+        if (e) e.preventDefault();
         let data = fetchedFileData;
         let mime = fetchedMimetype || note.fileMimetype;
 
@@ -234,7 +235,7 @@ export default function NoteDetail() {
                     </div>
                     <div className="flex items-center gap-2">
                         <button
-                            onClick={handleDownload}
+                            onClick={(e) => handleDownload(e)}
                             className="flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
                             title="Download PDF"
                         >
@@ -345,9 +346,14 @@ export default function NoteDetail() {
                                     <div className="mb-8 border border-gray-100 rounded-md p-2 bg-gray-50 flex justify-center flex-col items-center">
                                         {isFetchingFile && !note.fileUrl && <div className="animate-pulse text-xs text-indigo-500 mb-2">Loading high-res image...</div>}
                                         <img 
-                                            src={fetchedFileData ? `data:${fetchedMimetype || note.fileMimetype};base64,${fetchedFileData}` : note.fileUrl} 
+                                            src={fetchedFileData ? `data:${fetchedMimetype || note.fileMimetype};base64,${fetchedFileData}` : note.fileUrl.replace('http://', 'https://')} 
                                             alt={note.title} 
-                                            className="max-w-full rounded h-auto max-h-[500px] object-contain" 
+                                            className="max-w-full rounded h-auto max-h-[600px] object-contain shadow-sm" 
+                                            onError={(e) => {
+                                                if (e.target.src.includes('http://')) {
+                                                    e.target.src = e.target.src.replace('http://', 'https://');
+                                                }
+                                            }}
                                         />
                                     </div>
                                 )}

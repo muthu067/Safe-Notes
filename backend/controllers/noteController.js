@@ -22,7 +22,8 @@ exports.createNote = async (req, res) => {
             const fileBuffer = fs.readFileSync(req.file.path);
             fileData = fileBuffer.toString('base64');
             
-            fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+            const protocol = req.get('x-forwarded-proto') || req.protocol;
+            fileUrl = `${protocol}://${req.get('host')}/uploads/${req.file.filename}`.replace('http://', 'https://');
             const mimetype = req.file.mimetype;
 
             if (mimetype === 'application/pdf') {
