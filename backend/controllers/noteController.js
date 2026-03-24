@@ -184,8 +184,7 @@ exports.getMyNotes = async (req, res) => {
 exports.getNoteById = async (req, res) => {
     try {
         const { id } = req.params;
-        // Explicitly exclude heavy fields in projection object
-        const note = await Note.findById(id, { fileData: 0, ocrText: 0, ocrText: 0 });
+        const note = await Note.findById(id);
 
         if (!note) {
             return res.status(404).json({ error: "Note not found" });
@@ -198,7 +197,6 @@ exports.getNoteById = async (req, res) => {
             }
         }
 
-        res.set('X-Audit-Security', 'Applied-V1');
         res.json(note);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
