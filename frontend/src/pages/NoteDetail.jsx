@@ -244,9 +244,15 @@ export default function NoteDetail() {
                             <Target className="w-4 h-4 mr-1.5 text-gray-500" /> Topics
                         </h3>
                         <div className="flex flex-wrap gap-1.5">
-                            {note.keyTopics?.map(t => (
-                                <span key={t} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">#{t}</span>
-                            ))}
+                            {note.keyTopics
+                                ?.filter(t => t && !t.startsWith('http') && !t.startsWith('www') && t.length < 50)
+                                .map(t => (
+                                    <span key={t} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">#{t}</span>
+                                ))
+                            }
+                            {(!note.keyTopics || note.keyTopics.filter(t => t && !t.startsWith('http') && t.length < 50).length === 0) && (
+                                <span className="text-xs text-gray-400 italic">No topics found.</span>
+                            )}
                         </div>
                     </div>
 
@@ -283,7 +289,7 @@ export default function NoteDetail() {
                 <div className="flex-1 mt-6 lg:mt-0">
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         {!isPdf ? (
-                            <div className="p-8 min-h-[500px] prose prose-sm max-w-none">
+                            <div className="p-8 min-h-[500px]">
                                 {(note.fileData || note.fileUrl) && (
                                     <div className="mb-8 border border-gray-100 rounded-md p-2 bg-gray-50 flex justify-center">
                                         <img 
@@ -293,7 +299,13 @@ export default function NoteDetail() {
                                         />
                                     </div>
                                 )}
-                                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">{note.content}</div>
+                                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-sm">
+                                    {(note.content || '')
+                                        .replace(/\[Handwritten:[^\]]*\]/g, '')
+                                        .replace(/\[Scan detected:[^\]]*\]/g, '')
+                                        .trim()
+                                    }
+                                </div>
                             </div>
                         ) : (
                             <div className="bg-gray-100 max-h-[85vh] overflow-y-auto w-full flex flex-col items-center py-6">
