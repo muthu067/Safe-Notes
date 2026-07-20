@@ -11,6 +11,7 @@ const collectionRoutes = require('./routes/collectionRoutes');
 const moderationWebhook = require('./routes/moderationWebhook');
 
 const app = express();
+app.set("trust proxy",1);
 
 const corsOptions = {
     origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL, 'http://localhost:5173'] : '*',
