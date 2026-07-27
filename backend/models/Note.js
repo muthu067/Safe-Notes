@@ -55,6 +55,10 @@ const noteSchema = new mongoose.Schema({
     ocrText: {
         type: String
     },
+    ocrPending: {
+        type: Boolean,
+        default: false
+    },
     readingTime: {
         type: Number
     },
