@@ -16,6 +16,7 @@ exports.createNote = async (req, res) => {
         let fileMimetype = null;
         let fileUrl = null;
         let pdfText = "";
+        let ocrPending = false; // true when OCR could not run (missing tool, API down, etc.)
 
         if (req.file) {
             fileMimetype = req.file.mimetype;
@@ -43,7 +44,8 @@ exports.createNote = async (req, res) => {
                         pdfText = (pdfText || "") + " " + handwrittenText;
                     }
                 } catch (err) {
-                    console.warn("Handwritten OCR failed for PDF:", err.message);
+                    console.warn("Handwritten OCR unavailable for this PDF:", err.message);
+                    ocrPending = true;
                 }
             } else if (mimetype.startsWith('image/')) {
                 try {
@@ -60,14 +62,19 @@ exports.createNote = async (req, res) => {
                         pdfText = imageResult.extractedText;
                     }
 
-                    const handwrittenText = await ocrService.ocrImage(req.file.path);
-                    if (handwrittenText) {
-                        pdfText = (pdfText || "") + " [Handwritten: " + handwrittenText + "]";
+                    try {
+                        const handwrittenText = await ocrService.ocrImage(req.file.path);
+                        if (handwrittenText) {
+                            pdfText = (pdfText || "") + " [Handwritten: " + handwrittenText + "]";
+                        }
+                    } catch (ocrErr) {
+                        console.warn("Handwritten OCR unavailable for this image:", ocrErr.message);
+                        ocrPending = true;
                     }
 
                     textToCheck += pdfText;
                 } catch (err) {
-                    console.error("Image parsing/moderation/OCR error:", err);
+                    console.error("Image parsing/moderation error:", err);
                     return res.status(500).json({ error: "Image processing failed" });
                 }
             }
@@ -94,15 +101,13 @@ exports.createNote = async (req, res) => {
         const combinedText = (content || "") + " " + (pdfText || "");
         const words = combinedText.trim().split(/\s+/).length;
         const readingTime = Math.max(1, Math.ceil(words / 200));
-        
-        const cleanText = combinedText.replace(/\[Scan detected:.*?\]/g, '').trim();
-        
+
         let summary = "No summary found.";
-        if (cleanText.length > 5) {
+        if (combinedText.trim().length > 5) {
             try {
-                summary = await aiService.askAboutNote(cleanText, "Give me a one-sentence summary of these notes for a student dashboard. If you can't, say 'No summary found.'");
+                summary = await aiService.askAboutNote(combinedText, "Give me a one-sentence summary of these notes for a student dashboard. If you can't, say 'No summary found.'");
             } catch (err) {
-                summary = cleanText.substring(0, 150).trim() + "...";
+                summary = combinedText.substring(0, 150).trim() + "...";
             }
         } else if (title) {
             summary = `Shared educational notes about ${title}.`;
@@ -111,8 +116,8 @@ exports.createNote = async (req, res) => {
         const note = new Note({
             _id: noteId,
             title,
-            content: combinedText.substring(0, 5000), 
-            ocrText: (pdfText && !pdfText.includes('Ghostscript')) ? pdfText : "", 
+            content: combinedText.substring(0, 5000),
+            ocrText: pdfText || "",
             fileUrl,
             fileData,
             fileMimetype,
@@ -121,7 +126,8 @@ exports.createNote = async (req, res) => {
             tags: tagArray,
             summary,
             readingTime,
-            keyTopics: tagArray.slice(0, 5)
+            keyTopics: tagArray.slice(0, 5),
+            ocrPending
         });
 
         await note.save();
@@ -314,9 +320,8 @@ exports.askQuestion = async (req, res) => {
         }
 
         const context = `Title: ${note.title}\nSubject: ${note.subject}\nTags: ${note.tags.join(', ')}\nContent: ${note.content}\nHandwritten/OCR Text: ${note.ocrText || ""}`;
-        const cleanContext = context.replace(/\[Scan detected:.*?\]/g, '').trim();
 
-        const answer = await aiService.askAboutNote(cleanContext, question);
+        const answer = await aiService.askAboutNote(context, question);
         res.json({ answer });
     } catch (err) {
         console.error("AI Q&A Error:", err);
